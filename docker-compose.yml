@@ -1,0 +1,90 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: db_container
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: database
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - db_data:/var/lib/mysql
+
+  app:
+    build:
+      context: ./api
+      dockerfile: .docker/app/Dockerfile
+    env_file:
+      - ./api/.env
+    environment:
+      DATABASE_HOST: db_container
+      DATABASE_NAME: database
+      DATABASE_USER: user
+      DATABASE_PASSWORD: password
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./api:/rails
+    ports:
+      - 3001:3001
+    depends_on:
+      - redis
+      - db
+
+  redis:
+    container_name: redis_container
+    image: redis:7.0
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    depends_on:
+      - db
+
+  # sidekiq:
+  #   container_name: sidekiq_container
+  #   build:
+  #     context: ./api
+  #     dockerfile: .docker/sidekiq/Dockerfile
+  #   environment:
+  #     REDIS_URL: redis://redis:6379
+  #   depends_on:
+  #     - app
+  #     - redis
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: wp_db
+      WORDPRESS_DB_USER: wp_user
+      WORDPRESS_DB_PASSWORD: wp_password
+      WORDPRESS_DB_NAME: wp_database
+    volumes:
+      - wordpress_data:/var/www/html
+
+  wp_db:
+    image: mysql:8.0
+    container_name: wordpress_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: wp_database
+      MYSQL_USER: wp_user
+      MYSQL_PASSWORD: wp_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - wp_db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+  wordpress_data:
+    driver: local
+  wp_db_data:
+    driver: local
+
