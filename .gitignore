@@ -1,18 +1,4 @@
-.env
-
-# api
-api/.bundle
-api/log/*
-api/tmp/*
-api/log/*
-api/spec/log.txt
-
 # frontend
-frontend/.env
-frontend/.env.local
-frontend/.env.*.local
-frontend/dist/*
-frontend/src/output.css
-frontend/node_modules/*
+terraform/.terraform/
+terraform/terraform.tfstate*
 
-terraform/*
