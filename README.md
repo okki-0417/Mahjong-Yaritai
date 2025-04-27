@@ -2,10 +2,6 @@
 
 1. APIとフロントエンドを個別にGit管理しているため、それぞれをサブモジュールとしてクローンする必要がある
 ```
-cd api
-git submodule update --init --recursive
-
-cd ../frontend
 git submodule update --init --recursive
 ```
 
