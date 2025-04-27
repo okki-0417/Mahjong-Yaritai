@@ -32,15 +32,6 @@ services:
       - redis
       - db
 
-  redis:
-    container_name: redis_container
-    image: redis:7.0
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    depends_on:
-      - db
-
   # sidekiq:
   #   container_name: sidekiq_container
   #   build:
@@ -52,39 +43,19 @@ services:
   #     - app
   #     - redis
 
-  wordpress:
-    image: wordpress:latest
-    container_name: wordpress
-    restart: always
-    ports:
-      - 8080:80
-    environment:
-      WORDPRESS_DB_HOST: wp_db
-      WORDPRESS_DB_USER: wp_user
-      WORDPRESS_DB_PASSWORD: wp_password
-      WORDPRESS_DB_NAME: wp_database
+  redis:
+    container_name: redis_container
+    image: redis:7.0
     volumes:
-      - wordpress_data:/var/www/html
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    depends_on:
+      - db
 
-  wp_db:
-    image: mysql:8.0
-    container_name: wordpress_db
-    restart: always
-    environment:
-      MYSQL_DATABASE: wp_database
-      MYSQL_USER: wp_user
-      MYSQL_PASSWORD: wp_password
-      MYSQL_ROOT_PASSWORD: root_password
-    volumes:
-      - wp_db_data:/var/lib/mysql
 
 volumes:
   db_data:
     driver: local
   redis_data:
-    driver: local
-  wordpress_data:
-    driver: local
-  wp_db_data:
     driver: local
 

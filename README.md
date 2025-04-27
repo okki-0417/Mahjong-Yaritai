@@ -1,6 +1,15 @@
 # 麻雀ヤリタイ
 
-1. 環境変数を設定
+1. APIとフロントエンドを個別にGit管理しているため、サブモジュールとしてクローンする必要がある
+```
+cd api
+git submodule update --init --recursive
+
+cd ../frontend
+git submodule update --init --recursive
+```
+
+2. 環境変数を設定
 ```
 touch ./api/.env
 cp ./api/.env.local ./api/.env
@@ -9,9 +18,8 @@ touch ./frontend/.env
 cp ./frontend/.env.local ./frontend/.env
 ```
 
-2. Setup
+3. セットアップ
 ```
-docker compose build
-docker compose up -d
+docker compose up
 docker compose exec app bundle exec bin/setup
 ```
