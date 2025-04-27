@@ -1,11 +1,13 @@
 # 麻雀ヤリタイ
 
-1. APIとフロントエンドを個別にGit管理しているため、サブモジュールとしてクローンする必要がある
+## クローン
+**APIとフロントエンドを個別にGit管理しているため、サブモジュールとしてクローンする必要がある**
 ```
 git submodule update --init --recursive
 ```
 
-2. 環境変数を設定
+## セットアップ
+### 環境変数
 ```
 touch ./api/.env
 cp ./api/.env.local ./api/.env
@@ -14,14 +16,34 @@ touch ./frontend/.env
 cp ./frontend/.env.local ./frontend/.env
 ```
 
-3. ログファイルを作成
+### ログファイルを作成
+**Railsを立ち上げるのに必要**
 ```
 mkdir ./api/log
 touch ./api/log/development.log
+touch ./api/spec/log.txt
 ```
 
-3. セットアップ
+## 立ち上げる
+### バックエンド
 ```
-docker compose up
+docker compose up -d
+```
+
+#### DB作成やSeedのセットアップ
+```
 docker compose exec app bundle exec bin/setup
+```
+
+### フロントエンド
+```
+cd frontend
+npm install
+npm run dev
+```
+
+#### CSS
+```
+touch src/stylesheets/output.css
+npm run build-css
 ```
