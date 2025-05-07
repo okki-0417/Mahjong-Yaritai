@@ -1,3 +1,13 @@
+# シークレットを参照
+data "aws_secretsmanager_secret" "rds_password" {
+  name = "prod/MY/RDS"
+}
+
+# 最新のシークレットの値（バージョン）を取得
+data "aws_secretsmanager_secret_version" "rds_password_version" {
+  secret_id = data.aws_secretsmanager_secret.rds_password.id
+}
+
 # RDSを作成
 resource "aws_db_instance" "rds" {
   allocated_storage       = 20
@@ -7,7 +17,7 @@ resource "aws_db_instance" "rds" {
   instance_class          = "db.t3.micro" # AWS 無料枠の最小サイズ
   identifier              = "mydatabase"
   username                = "admin"
-  password                = "your-secure-password" # セキュアなパスワードを設定（Secrets Manager に移行推奨）
+  password                = jsondecode(data.aws_secretsmanager_secret_version.rds_password_version.secret_string)["password"]
   parameter_group_name    = "default.mysql8.0"
   publicly_accessible     = false
   vpc_security_group_ids  = [aws_security_group.rds_sg.id]
