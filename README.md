@@ -25,7 +25,7 @@ touch ./api/spec/log.txt
 ```
 
 ## 立ち上げる
-### バックエンド
+### バックエンド（Rails API）
 ```
 docker compose up -d
 ```
@@ -35,15 +35,9 @@ docker compose up -d
 docker compose exec app bundle exec bin/setup
 ```
 
-### フロントエンド
+### フロントエンド（Next.js）
 ```
 cd frontend
 npm install
 npm run dev
-```
-
-#### CSS
-```
-touch src/stylesheets/output.css
-npm run build-css
 ```
