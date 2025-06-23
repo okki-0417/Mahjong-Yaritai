@@ -1,14 +1,14 @@
-# 麻雀ヤリタイ
+# Mahjong Yaritai
 
-## クローン
-**APIとフロントエンドを個別にGit管理しているため、サブモジュールとしてクローンする必要がある**
-```
-git submodule update --init --recursive
+## 1. Clone Submodules
+
+```bash
+git submodule update --init
 ```
 
-## セットアップ
-### 環境変数
-```
+## 2. Set Up Environment Variables
+
+```bash
 touch ./api/.env
 cp ./api/.env.local ./api/.env
 
@@ -16,34 +16,30 @@ touch ./frontend/.env
 cp ./frontend/.env.local ./frontend/.env
 ```
 
-### ログファイルを作成
-**Railsを立ち上げるのに必要**
-```
-mkdir ./api/log
+## 3. Create API Log Files
+
+```bash
+mkdir -p ./api/log
 touch ./api/log/development.log
 touch ./api/spec/log.txt
 ```
 
-## 立ち上げる
-### バックエンド
-```
+## 4. Bring Up the Docker Environment
+
+```bash
 docker compose up -d
 ```
 
-#### DB作成やSeedのセットアップ
-```
+## 5. Set Up the API
+
+```bash
 docker compose exec app bundle exec bin/setup
 ```
 
-### フロントエンド
-```
+## 6. Set Up the Frontend
+
+```bash
 cd frontend
 npm install
 npm run dev
-```
-
-#### CSS
-```
-touch src/stylesheets/output.css
-npm run build-css
 ```
