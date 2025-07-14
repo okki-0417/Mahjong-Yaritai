@@ -1,6 +1,6 @@
 # シークレットを参照
 data "aws_secretsmanager_secret" "rds_password" {
-  name = "prod/MY/RDS"
+  name = "prod/Mahjong-Yaritai/RDS"
 }
 
 # 最新のシークレットの値（バージョン）を取得
@@ -17,7 +17,7 @@ resource "aws_db_instance" "rds" {
   instance_class          = "db.t3.micro" # AWS 無料枠の最小サイズ
   identifier              = "mydatabase"
   username                = "admin"
-  password                = jsondecode(data.aws_secretsmanager_secret_version.rds_password_version.secret_string)["password"]
+  password                = "my_name_is_password"
   parameter_group_name    = "default.mysql8.0"
   publicly_accessible     = false
   vpc_security_group_ids  = [aws_security_group.rds_sg.id]

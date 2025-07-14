@@ -45,17 +45,18 @@ resource "aws_ecs_task_definition" "web_task" {
       }
       environment = [
         { name = "RAILS_ENV", value = "production" },
+        { name = "SECRET_KEY_BASE", value = "68b1ed666748c1a549e173c6a2c811a55719c700fddf6509417a126064435ab923f395c97c997d2746c3fa20ef0aad605a6d37d603c5260f295aee5149c86782" },
         { name = "FRONTEND_DOMAIN", value = "mahjong-yaritai.netlify.app" },
 
         { name = "HOST_NAME", value = "mahjong-yaritai.com" },
-        { name = "REDIS_URL", value = aws_elasticache_cluster.redis.cache_nodes[0].address },
+        { name = "REDIS_URL", value = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:6379" },
 
         { name = "DATABASE_HOST", value = aws_db_instance.rds.address },
-        { name = "DATABASE_NAME", value = "database" },
-        { name = "DATABASE_ROOT", value = "app_user" },
+        { name = "DATABASE_NAME", value = "app_db" },
+        { name = "DATABASE_ROOT", value = "admin" },
+        { name = "DATABASE_ROOT_PASSWORD", value = "my_name_is_password" },
       ]
       secrets = [
-        { name = "DATABASE_ROOT_PASSWORD", valueFrom = data.aws_secretsmanager_secret.rds_password.arn },
       ]
     }
   ])

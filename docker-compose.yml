@@ -1,16 +1,15 @@
 services:
   db:
-    image: mysql:8.0
+    image: postgres:17.0
     container_name: db_container
     ports:
-      - 3306:3306
+      - 5432:5432
     environment:
-      MYSQL_DATABASE: database
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: root_password
+      POSTGRES_DB: database
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
 
   app:
     build:
@@ -19,11 +18,8 @@ services:
     env_file:
       - ./api/.env
     environment:
-      DATABASE_HOST: db_container
-      DATABASE_NAME: database
-      DATABASE_USER: user
-      DATABASE_PASSWORD: password
-      REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     volumes:
       - ./api:/rails
     ports:
@@ -32,16 +28,21 @@ services:
       - redis
       - db
 
-  # sidekiq:
-  #   container_name: sidekiq_container
-  #   build:
-  #     context: ./api
-  #     dockerfile: .docker/sidekiq/Dockerfile
-  #   environment:
-  #     REDIS_URL: redis://redis:6379
-  #   depends_on:
-  #     - app
-  #     - redis
+  sidekiq:
+    container_name: sidekiq_container
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    environment:
+      REDIS_URL: redis://redis:6379
+    env_file:
+      - ./api/.env
+    volumes:
+      - ./api:/rails
+    depends_on:
+      - app
+      - redis
 
   redis:
     container_name: redis_container
@@ -58,4 +59,3 @@ volumes:
     driver: local
   redis_data:
     driver: local
-

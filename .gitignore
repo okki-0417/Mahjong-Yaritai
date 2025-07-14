@@ -3,3 +3,5 @@ terraform/.terraform.*
 terraform/terraform.*
 terraform/.terraform/
 terraform/secrets.tf
+node_modules
+.aider*
