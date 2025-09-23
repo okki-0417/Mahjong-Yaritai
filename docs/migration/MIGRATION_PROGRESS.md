@@ -153,9 +153,12 @@ config.active_record.query_log_tags = [
    - テスト: `spec/graphql/queries/what_to_discard_problems_spec.rb`
    - **注意**: GraphQL予約語(`first`, `after`)との競合回避のため`limit`/`cursor`を使用
 
-5. **何切る問題詳細**
-   - 問題情報 + 投票結果 + コメントを1クエリで取得
-   - 複雑なネスト構造の設計
+5. **何切る問題詳細** ✅ (完了)
+   - 問題情報 + 牌情報(14枚) + カウント情報を1クエリで取得
+   - TileType追加（suit, ordinalNumberInSuit）
+   - votesCount, commentsCount, likesCountフィールド
+   - preloadで14枚の牌をN+1なしで取得
+   - テスト: `spec/graphql/queries/what_to_discard_problem_spec.rb`
 
 ### 低優先度 (Mutation実装が必要)
 6. **フォロー/フォロー解除**
