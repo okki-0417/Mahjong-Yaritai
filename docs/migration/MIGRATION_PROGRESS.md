@@ -129,23 +129,29 @@ config.active_record.query_log_tags = [
 ## 今後の移行優先順位
 
 ### 高優先度 (すぐに移行可能)
-1. **セッション管理** ✅ (バックエンド完了)
+1. **セッション管理** ✅ (完了)
    - シンプルな構造
    - 全ページで使用
    - REST APIと並行稼働可能
+   - テスト: `spec/graphql/queries/current_session_spec.rb`
 
-2. **ユーザー情報取得**
+2. **ユーザー情報取得** ✅ (完了)
    - UserTypeが既に定義済み
-   - `getUser(id: ID!)` クエリ追加
+   - `user(id: ID!)` クエリ実装
+   - フォロー状態も含めて取得可能
+   - テスト: `spec/graphql/queries/user_spec.rb`
 
-3. **フォロー状態取得**
+3. **フォロー状態取得** ✅ (完了)
    - UserType.is_followingフィールド実装済み
-   - N+1問題をgraphql-batchで解決
+   - ログイン状態に応じて正しい値を返す
 
 ### 中優先度 (設計が必要)
-4. **何切る問題一覧**
-   - カーソルベースページネーション実装
+4. **何切る問題一覧** ✅ (完了)
+   - カーソルベースページネーション実装済み
    - Connection/Edgeパターン適用
+   - limit/cursor引数でページング制御
+   - テスト: `spec/graphql/queries/what_to_discard_problems_spec.rb`
+   - **注意**: GraphQL予約語(`first`, `after`)との競合回避のため`limit`/`cursor`を使用
 
 5. **何切る問題詳細**
    - 問題情報 + 投票結果 + コメントを1クエリで取得
@@ -171,7 +177,38 @@ config.active_record.query_log_tags = [
 
 ## ハマりポイントメモ
 
-### 1. GraphQL nullableフィールドの設計
+### 1. GraphQL予約語との競合
+
+**問題**: Connection型のフィールドで`first`, `after`引数を使うとエラー
+
+```
+GraphQL::Schema::DuplicateNamesError:
+  Found two visible definitions for `Query.whatToDiscardProblems.first`
+```
+
+**原因**: GraphQL-Rubyが自動的にConnection型に`first`, `after`, `last`, `before`を追加
+
+**解決策**:
+```ruby
+# NG: 予約語を使用
+field :items, ItemConnectionType, null: false do
+  argument :first, Integer
+  argument :after, String
+end
+
+# OK: 独自の引数名を使用
+field :items, ItemConnectionType, null: false, connection: false do
+  argument :limit, Integer
+  argument :cursor, String
+end
+```
+
+**教訓**:
+- Connection型は`connection: false`で自動ラッパーを無効化
+- 独自のページネーション引数名を使う（`limit`/`cursor`等）
+- 手動でConnection構造（edges, pageInfo）を返す
+
+### 2. GraphQL nullableフィールドの設計
 
 **問題**: `null: false`の適用タイミング
 
@@ -216,6 +253,30 @@ context = {
 - A/Bテスト可能
 - 段階的移行でリスク最小化
 
+### 4. Apollo Client v4のインポートパス問題
+
+**問題**: TypeScriptでApollo Clientの型が正しく解決されない
+
+```
+error TS2305: Module '"@apollo/client"' has no exported member 'ApolloProvider'.
+```
+
+**原因**: Apollo Client v4ではReact関連のexportが`@apollo/client/react`に分離された
+
+**解決策**:
+```typescript
+// ❌ 間違い
+import { ApolloProvider, useQuery } from "@apollo/client";
+
+// ✅ 正しい
+import { ApolloProvider, useQuery } from "@apollo/client/react";
+```
+
+**教訓**:
+- Apollo Client v4以降はReact hooksが別パッケージに
+- `@apollo/client` - コア機能（ApolloClient, InMemoryCache, HttpLink）
+- `@apollo/client/react` - React統合（ApolloProvider, useQuery, useMutation）
+
 ---
 
 ## パフォーマンス測定
@@ -259,11 +320,65 @@ context = {
 - [x] セッションクエリ実装
 - [x] 動作確認
 
-### Phase 2完了条件 (次)
-- [ ] Apollo Client セットアップ
-- [ ] Code Generator設定
-- [ ] フロントエンドでセッションクエリ実装
-- [ ] REST APIとの並行稼働確認
+### Phase 2完了条件 ✅ (完了)
+- [x] Apollo Client セットアップ
+- [x] Code Generator設定
+- [x] フロントエンドでセッションクエリ実装
+- [x] REST APIとの並行稼働確認
+
+#### フロントエンド実装詳細
+
+**インストールパッケージ:**
+```bash
+npm install @apollo/client graphql
+npm install --save-dev @graphql-codegen/cli @graphql-codegen/client-preset
+```
+
+**Apollo Client設定** (`src/lib/apollo/client.ts`):
+```typescript
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+
+const httpLink = new HttpLink({
+  uri: `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+  credentials: "include",
+});
+
+export const apolloClient = new ApolloClient({
+  link: httpLink,
+  cache: new InMemoryCache(),
+});
+```
+
+**Code Generator設定** (`codegen.ts`):
+```typescript
+import type { CodegenConfig } from "@graphql-codegen/cli";
+
+const config: CodegenConfig = {
+  schema: "http://localhost:3001/graphql",
+  documents: ["src/**/*.graphql"],
+  ignoreNoDocuments: true,
+  generates: {
+    "./src/generated/": {
+      preset: "client",
+      plugins: [],
+    },
+  },
+};
+```
+
+**重要なポイント:**
+- `@apollo/client/react`から`ApolloProvider`と`useQuery`をインポート
+- client presetを使用（hooksは自動生成されない）
+- `useQuery`にGraphQLドキュメントを直接渡す
+- 環境変数は`NEXT_PUBLIC_API_URL`を使用
+
+**使用例:**
+```typescript
+import { ApolloProvider, useQuery } from "@apollo/client/react";
+import { CurrentSessionDocument } from "@/src/generated/graphql";
+
+const { data, loading, error } = useQuery(CurrentSessionDocument);
+```
 
 ### 最終完了条件
 - [ ] 全REST APIをGraphQLに移行
