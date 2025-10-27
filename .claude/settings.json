@@ -1,5 +1,10 @@
 {
-  "autoApprove": {
-    "bash": ["*"]
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Grep(*)",
+      "Glob(*)",
+      "Search(*)"
+    ]
   }
 }
