@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:17.0
-    container_name: db_container
+    container_name: mj_database
     ports:
       - 5432:5432
     environment:
@@ -12,6 +12,7 @@ services:
       - db_data:/var/lib/postgresql/data
 
   app:
+    container_name: mj_app
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -29,7 +30,7 @@ services:
       - db
 
   sidekiq:
-    container_name: sidekiq_container
+    container_name: mj_sidekiq
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -45,7 +46,7 @@ services:
       - redis
 
   redis:
-    container_name: redis_container
+    container_name: mj_redis
     image: redis:7.0
     volumes:
       - redis_data:/data
